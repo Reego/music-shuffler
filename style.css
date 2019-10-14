@@ -1,0 +1,103 @@
+* {
+    margin:0 5px;
+    font:caption;
+}
+
+body {
+    display:none;
+}
+
+h1 {
+    font-size:16px;
+}
+
+#source-folder-label {
+    margin-left:435px;
+    color:#333;
+}
+
+#source-folder-info {
+    max-height:100px;
+    width:auto;
+    overflow:scroll;
+    border:2px solid gray;
+}
+
+.source-folder-row {
+    display:block;
+    background-color:gray;
+}
+
+.source-folder-path {
+    width:400px;
+    text-decoration:underline;
+}
+
+.source-folder-quantity, .source-folder-depth {
+    width:40px;
+}
+
+.source-folder-independent {
+    width:20px;
+}
+
+.source-folder-remove {
+    width:100px;
+    height:20px;
+    line-height:20px;
+}
+
+.float-left {
+    display:inline-block;
+    float:left;
+}
+
+.button {
+    border:1px solid #55d;
+    height:20px;
+    background-color:#58d;
+    color:white;
+    text-align:center;
+    border-radius:2px;
+    margin:auto;
+}
+
+#save-config, #target-change, #save-db{
+    display:inline-block;
+    width:auto;
+    height:auto;
+    padding:5px;
+    margin:0;
+}
+
+#add-source-folder {
+    width:200px;
+    border:1px solid #d55;
+    background-color:#d78;
+    text-align:center;
+    height:26px;
+    line-height:26px;
+}
+
+#reset {
+    width:60px;
+    height:30px;
+    line-height:30px;
+    border:1px solid #d55;
+    background-color:#d78;
+}
+#export {
+    width:150px;
+    height:40px;
+    line-height:40px;
+    border:1px solid #5d5;
+    background-color:#7d8;
+}
+
+.button:hover {
+    cursor:pointer;
+}
+
+.source-folder-row {
+    display:block;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "playlist-shuffler",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "reegodev",
+  "devDependencies": {
+    "electron": "^6.0.12"
+  },
+  "dependencies": {
+    "node-id3": "^0.1.11"
+  }
+}

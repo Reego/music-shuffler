@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Music Shuffler</title>
+</head>
+<body>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <br/>
+    <div id="source-folders-wrap">
+        <h1>Source Folders</h1>
+
+        <br/>
+
+        <div id="source-folders-wrap">
+            <div id="source-folder-label">Songs / Depth</div>
+            <br/>
+            <div id="source-folder-info"><br/>
+            </div>
+        </div>
+
+        <br/>
+
+        <div id="add-source-folder" class="button">Add Source Folder</div>
+
+        <br/>
+    </div>
+    <br/><br/>
+    <div id="target-path"></div><br/><div id="target-change" class="button">Change Target Path</div>
+    <br/>
+    <br/>
+<br/>
+    <div id="max-per-artist">Max songs per artist: <input id="max-per-artist-input"/></div>
+    <br/>
+    <div id="save-config" class="button">Save Settings</div>
+    <br/>
+    <br/>
+    <br/>
+    <p>After add/removing songs while app is open:</p>
+    <br/>
+    <div id="save-db" class="button">Update Songs</div>
+    <br/>
+    <br/>
+    <br/>
+    <div id="exports-since-reset">Exports since last reset: <span id="exports-since-reset-num"></span></div>
+    <br/>
+    <br/>
+    <div id="reset" class="button">Reset</div>
+    <br/>
+    <div id="export" class="button">Export</div>
+    <script src="./app.js"></script>
+</body>
+</html>
