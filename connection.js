@@ -2,7 +2,6 @@ const fs = require('fs')
 const ospath = require('path')
 const conf = require('./config')
 const { Song } = require('./shuffler')
-const ni3 = require('node-id3')
 
 const getDirectories = source =>
   fs.readdirSync(source, { withFileTypes: true })
@@ -16,7 +15,6 @@ class BlockedConnection {
         //this.xml = this.builder.buildObject
         this.root = this.getJSON()
         this.prevBlockedSong = {'path':'', 'index':0}
-        this.songs = []
     }
 
     getJSON() {
@@ -35,77 +33,122 @@ class BlockedConnection {
     }
 
     reset() {
-      this.root = {'folders':[]}
+      //this.getJSON()
+
+      this.root = {'folders':{},'unblockedFolders':{}}
+
+      // for(let folder of this.root.folders) {
+      //   folder.songs = []
+      // }
+      // for(let unblockedFolder of this.root.unblockedFolders) {
+      //   unblockedFolder.songs = []
+      // }
       this.save()
     }
 
     blockSong(song) {
 
       let msg = ''
-      let folderPath = song.ownerDir
 
-      if(this.prevBlockedSong.path === song) {
-        this.root.folders[this.prevBlockedSong.index].songs.push(song)
-        return
-      }
-
-      let g = 0
-      for(let folder of this.root.folders) {
-        if(folder.path === folderPath) {
-          // let temp = [].concat(folder.songs)
-          // temp.push(song)
-          //folder.songs = temp
-          folder.songs.push(song)
-          this.save()
-
-          this.prevBlockedSong = {'path':folderPath, 'index':g}
-          return
-        }
-        g++
-      }
-
-      let folder = {
-        'path':folderPath,
-        'songs':[song]
-      }
-
-      // let temp = [].concat(this.root.folders)
-      // temp.push(folder)
-      this.root.folders.push(folder)
-      this.save()
+      this.root.folders[song.ownerDir].songs[song.path] = song
+      delete this.root.unblockedFolders[song.ownerDir].songs[song.path]
     }
 
     updateJSONAdded(path, config) {
-      let folder = {
-        'path':path,
-        'songs':[]
+
+      if(path in this.root.folders) {
+        return
       }
-      let temp = [].concat(this.root.folders)
-      temp.push(folder)
-      this.root.folders = temp
+
+      this.root.folders[path] = {
+        'songs':{}
+      }
+      this.root.unblockedFolders[path] = {
+        'songs':{}
+      }
+
       this.save()
-      this.getSongs(config)
+      this.updateSongs(config)
     }
 
     updateJSONRemoved(path, config) {
-      let i = 0
-      for(let folder of this.root.folders) {
-        if(folder.path === path) {
-          this.root.folders.splice(i, 1)
-          this.save()
-          return
-        }
-        i++
-      }
-      this.getSongs(config)
+
+      delete this.root.folders[path]
+      delete this.root.unblockedFolders[path]
+      this.save()
+      this.updateSongs(config)
     }
 
     getSongs(config) {
-      let songs = []
-      let songsNums = []
-      for(let pathObj of config['extractionPaths']) {
+      throw new Exception("Obsolete!")
+      // let songs = []
+      // let songsNums = []
+      // for(let pathObj of config['extractionPaths']) {
 
-          let folder = []
+      //     let folder = []
+
+      //     if(pathObj.depth === 2) {
+
+      //         for(let subdir of getDirectories(pathObj.path)) {
+
+      //             let source = ospath.join(pathObj.path, subdir)
+      //             for(let item of fs.readdirSync(source)) {
+      //                 if(ospath.extname(item) === '.mp3') {
+
+      //                     let path = ospath.join(source, item)
+      //                     let tags = ni3.read(path)
+
+      //                     let artist = tags.artist
+
+      //                     if(artist === undefined || artist === null || artist === '') {
+      //                         artist = ''
+      //                     }
+
+      //                     folder.songs.push(new Song(path, pathObj.path, artist, 2))
+      //                 }
+      //             }
+      //         }
+      //     }
+
+      //     let source = pathObj.path
+      //     for(let item of fs.readdirSync(source)) {
+      //         if(ospath.extname(item) === '.mp3') {
+
+      //             let path = ospath.join(source, item)
+      //             let tags = ni3.read(path)
+
+      //             let artist = tags.artist
+
+      //             if(artist === undefined || artist === null || artist === '') {
+      //                 artist = ''
+      //             }
+
+      //             folder.songs.push(new Song(path, path, artist))
+      //         }
+      //     }
+
+      //     songs.push(folder)
+      //     songsNums.push(folder.length)
+      // }
+
+      // this.songs = songs
+      // this.songsNums = songsNums
+    }
+
+    updateSongs(config) {
+
+      this.songs = []
+      this.songsNum = 0
+      if(config['extractionPaths'].length === 0) {
+        return
+      }
+
+      for(let pathObj of config['extractionPaths']) {
+        this.root.folders[pathObj.path] = {'songs':{}}
+        this.root.unblockedFolders[pathObj.path] = {'songs':{}}
+      }
+
+      for(let pathObj of config['extractionPaths']) {
 
           if(pathObj.depth === 2) {
 
@@ -114,17 +157,11 @@ class BlockedConnection {
                   let source = ospath.join(pathObj.path, subdir)
                   for(let item of fs.readdirSync(source)) {
                       if(ospath.extname(item) === '.mp3') {
+                        let path = ospath.join(source, item)
+                        if(!(path in this.root.folders) && !(path in this.root.unblockedFolders)) {
 
-                          let path = ospath.join(source, item)
-                          let tags = ni3.read(path)
-
-                          let artist = tags.artist
-
-                          if(artist === undefined || artist === null || artist === '') {
-                              artist = ''
-                          }
-
-                          folder.push(new Song(path, pathObj.path, artist, 2))
+                          this.root.unblockedFolders[pathObj.path].songs[path] = new Song(path, pathObj.path, '', 2)
+                        }
                       }
                   }
               }
@@ -134,46 +171,46 @@ class BlockedConnection {
           for(let item of fs.readdirSync(source)) {
               if(ospath.extname(item) === '.mp3') {
 
-                  let path = ospath.join(source, item)
-                  let tags = ni3.read(path)
+                let path = ospath.join(source, item)
+                if(!(path in this.root.folders) && !(path in this.root.unblockedFolders)) {
 
-                  let artist = tags.artist
-
-                  if(artist === undefined || artist === null || artist === '') {
-                      artist = ''
-                  }
-
-                  folder.push(new Song(path, path, artist))
+                  this.root.unblockedFolders[pathObj.path].songs[path] = new Song(path, path, '', 1)
+                }
               }
           }
-
-          songs.push(folder)
-          songsNums.push(folder.length)
       }
 
-      this.songs = songs
-      this.songsNums = songsNums
+      this.songs = []
+      let songsNum = 0
+
+      for(let unblockedFolder in this.root.unblockedFolders) {
+
+        let uf = this.root.unblockedFolders[unblockedFolder]
+        let folder = []
+        for(let songk in uf.songs) {
+          folder.push(uf.songs[songk])
+          songsNum++
+        }
+
+        this.songs.push(folder)
+      }
+
+      this.songsNum = songsNum
+
+      this.save()
     }
 
     getPreSongs(config) {
-      if(this.songs.length === 0) {
-        this.getSongs(config)
+      if(this.songs === undefined || this.songs.length === 0) {
+        this.updateSongs(config)
       }
       return [this.songs, this.songsNums]
     }
 
-    getBlockedNum(path) {
-      for(let folder of this.root.folders) {
-        if(folder.path === path) {
-          return folder.songs.length
-        }
-      }
-      return 0
-    }
-
     save() {
 
-      for(let folder of this.root.folders) {
+      for(let folder in
+       this.root.folders.values) {
         if(folder.depth === 1) {
           let indices = []
           let i = 0
@@ -195,27 +232,9 @@ class BlockedConnection {
 
     filterSongsByFolder(folderPath, songs) {
 
-      let blockedSongs = []
-      for(let folder of this.root.folders) {
-        if(folder.path === folderPath) {
-          for(let song of folder.songs) {
-            blockedSongs.push(new Song(song.path))
-          }
-          break
-        }
-      }
-
       let unblockedSongs = []
       for(let song of songs) {
-        let isBlocked = false
-        for(let blockedSong of blockedSongs) {
-          if(song.path === blockedSong.path) {
-            isBlocked = true
-            break
-          }
-        }
-
-        if(!isBlocked) {
+        if(!(song.path in this.root.folders[song.ownerDir])) {
           unblockedSongs.push(song)
         }
       }

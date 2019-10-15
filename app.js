@@ -13,10 +13,6 @@ function appSetup() {
 
     document.body.style.display = 'block'
 
-    if(appdata.connection.songs.length === 0) {
-        appdata.connection.getSongs(appdata.config)
-    }
-
     let i = 0
     let sourcesParent = document.getElementById('source-folder-info')
     for(let pathObj of appdata.config['extractionPaths']) {
@@ -39,7 +35,7 @@ function appSetup() {
         let button = document.createElement('div')
         button.className = 'float-left source-folder-remove button'
         button.innerHTML = 'Remove'
-        button.addEventListener('click', ()=>{removeSourceFolder(g)})
+        button.addEventListener('click', ()=>{ipcRenderer.send('removeSourceFolder',g)})
 
         row.appendChild(extractionPath)
         row.appendChild(inp2)
@@ -53,12 +49,29 @@ function appSetup() {
         i++
     }
 
-    document.getElementById('add-source-folder').addEventListener('click', addSourceFolder)
-    document.getElementById('target-change').addEventListener('click', targetChange)
-    document.getElementById('save-config').addEventListener('click', saveSettings)
-    document.getElementById('reset').addEventListener('click', reset)
-    document.getElementById('export').addEventListener('click', shuffle)
-    document.getElementById('save-db').addEventListener('click', saveDB)
+    document.getElementById('add-source-folder').addEventListener('click', ()=>ipcRenderer.send('addSourceFolder', null))
+    document.getElementById('target-change').addEventListener('click', ()=>ipcRenderer.send('targetChange',null))
+    document.getElementById('save-config').addEventListener('click', ()=> {
+
+        let params = {
+            'max-per-artist-input':1,
+            'source-folder-quantity':[],
+            'source-folder-depth':[]
+        }
+        params['max-per-artist-input'] = document.getElementById('max-per-artist-input').value
+
+        let sfq = document.getElementsByClassName('source-folder-quantity')
+        let sfd = document.getElementsByClassName('source-folder-depth')
+        for(let i = 0; i < sfq.length; i++) {
+            params['source-folder-quantity'].push(sfq[i].value)
+            params['source-folder-depth'].push(sfd[i].value)
+        }
+
+        ipcRenderer.send('saveSettings', params)
+    }
+    )
+    document.getElementById('reset').addEventListener('click', ()=>ipcRenderer.send('rreset', null))
+    document.getElementById('export').addEventListener('click', ()=>{document.body.innerHTML = 'Generating playlists...';ipcRenderer.send('shuffle', null)})
 
     document.getElementById('target-path').innerHTML = appdata.config['destinationPath']
 
@@ -76,119 +89,6 @@ function appSetup() {
 
 function log(msg) {
     ipcRenderer.send('log', msg)
-}
-
-function refr(ad) {
-    ipcRenderer.send('refr', ad)
-}
-
-function removeSourceFolder(i) {
-    let modPathObjs = [].concat(appdata.config['extractionPaths'])
-
-    let p = modPathObjs[i]
-    modPathObjs.splice(i, 1)
-    appdata.config['extractionPaths'] = modPathObjs
-    appdata.config = conf.saveConfig(appdata.config)
-    appdata.connection.updateJSONRemoved(p, appdata.config)
-    refr(appdata)
-}
-
-function saveDB(e) {
-
-    appdata.connection.getSongs(appdata.config)
-    alert('Files Updated.')
-}
-
-function saveSettings(e) {
-    let val = document.getElementById('max-per-artist-input').value
-    if(isNaN(val)) {
-        appdata.config['maxPerArtist'] = parseInt(0)
-    }
-    else {
-        appdata.config['maxPerArtist'] = parseInt(val)
-    }
-
-    let i = 0
-    for(let folder of appdata.config['extractionPaths']) {
-
-        appdata.config['extractionPaths'][i].count = document.getElementsByClassName('source-folder-quantity')[i].value
-        appdata.config['extractionPaths'][i].depth = document.getElementsByClassName('source-folder-depth')[i].value
-        i++
-    }
-
-    appdata.config = conf.saveConfig(appdata.config)
-    //addMessage('Settings saved.')
-    alert('Changes Saved.')
-}
-
-function addSourceFolder(e) {
-    let data = remote.dialog.showOpenDialogSync({ properties: ['openDirectory'] })
-    if(data != null) {
-
-        let pathObjs = []
-
-        let newPathObj = {'path':data[0],'count':0, 'depth':1}
-
-        if(appdata.config['extractionPaths'].length > 0) {
-            pathObjs = pathObjs.concat(appdata.config['extractionPaths'])
-        }
-
-        pathObjs.push(newPathObj)
-
-        appdata.config['extractionPaths'] = pathObjs
-
-        appdata.config = conf.saveConfig(appdata.config)
-        appdata.connection.updateJSONAdded(data[0], appdata.config)
-        refr(appdata)
-    }
-}
-
-function targetChange(e) {
-    let data = remote.dialog.showOpenDialogSync({ properties: ['openDirectory'] })
-    if(data != null) {
-
-        appdata.config['destinationPath'] = data[0]
-
-        appdata.config = conf.saveConfig(appdata.config)
-
-        refr(appdata)
-    }
-}
-
-function reset(e) {
-    appdata.config['exportsSinceReset'] = 0
-    appdata.config = conf.saveConfig(appdata.config)
-    //addMessage('Reset.')
-    appdata.connection.reset()
-    appdata.connection.getSongs(appdata.config)
-    alert('Reset.')
-    refr(appdata)
-}
-
-function shuffle(e) {
-
-    let msgs = shuffler.exportPlaylist(appdata)
-
-    addMessages(msgs)
-
-    appdata.config = conf.saveConfig(appdata.config)
-
-    // for(let msg of msgs) {
-    //     log(msg)
-    // }
-
-    refr(appdata)
-}
-
-function addMessage(msg) {
-    let msgs = [].concat(appdata.messages)
-    msgs.push(msg)
-    appdata.messages = msgs
-}
-
-function addMessages(msg) {
-    let msgs = msg.concat(appdata.messages)
-    appdata.messages = msgs
 }
 
 document.body.onload = appSetup;
