@@ -50,6 +50,8 @@ class BlockedConnection {
 
       let msg = ''
 
+      console.log('OWNER DIR ' + song.ownerDir)
+
       this.root.folders[song.ownerDir].songs[song.path] = song
       delete this.root.unblockedFolders[song.ownerDir].songs[song.path]
     }
@@ -174,7 +176,7 @@ class BlockedConnection {
                 let path = ospath.join(source, item)
                 if(!(path in this.root.folders) && !(path in this.root.unblockedFolders)) {
 
-                  this.root.unblockedFolders[pathObj.path].songs[path] = new Song(path, path, '', 1)
+                  this.root.unblockedFolders[pathObj.path].songs[path] = new Song(path, pathObj.path, '', 1)
                 }
               }
           }
