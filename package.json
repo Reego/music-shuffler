@@ -7,7 +7,7 @@
   },
   "author": "reegodev",
   "devDependencies": {
-    "electron": "^6.0.12"
+    "electron": "^9.1.0"
   },
   "dependencies": {
     "async": "^3.1.0",
